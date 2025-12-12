@@ -9,6 +9,8 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, username: string) => Promise<{ error: Error | null }>;
+  signInWithUsername: (username: string, password: string) => Promise<{ error: Error | null }>;
+  signUpWithUsername: (username: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -114,13 +116,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   };
 
+  // Username-based authentication (uses generated email internally)
+  const signInWithUsername = async (username: string, password: string) => {
+    // Generate internal email from username
+    const internalEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@internal.local`;
+    
+    const { error } = await supabase.auth.signInWithPassword({
+      email: internalEmail,
+      password,
+    });
+    
+    if (error) {
+      return { error: new Error('使用者名稱或密碼錯誤') };
+    }
+    return { error: null };
+  };
+
+  const signUpWithUsername = async (username: string, password: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    // Check if username already exists
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('username', username)
+      .maybeSingle();
+    
+    if (existingUser) {
+      return { error: new Error('此使用者名稱已被使用') };
+    }
+
+    // Generate internal email from username
+    const internalEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@internal.local`;
+
+    const { data, error } = await supabase.auth.signUp({
+      email: internalEmail,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+      }
+    });
+
+    if (error) {
+      return { error: error as Error };
+    }
+
+    // Create profile with username
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: data.user.id,
+          username: username,
+        });
+
+      if (profileError) {
+        return { error: new Error('建立用戶資料失敗') };
+      }
+    }
+
+    return { error: null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUsername(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, username, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, username, loading, signIn, signUp, signInWithUsername, signUpWithUsername, signOut }}>
       {children}
     </AuthContext.Provider>
   );
