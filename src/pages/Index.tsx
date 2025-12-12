@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import ReportForm from '@/components/ReportForm';
 import ReportList from '@/components/ReportList';
+import { GoogleSheetDataDisplay } from '@/components/GoogleSheetDataDisplay';
 import { 
-  ClipboardList, Plus, LogOut, User, X, Loader2 
+  ClipboardList, Plus, LogOut, User, X, Loader2, FileSpreadsheet, List 
 } from 'lucide-react';
 import {
   Sheet,
@@ -16,6 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 function generateReportCode(): string {
   const now = new Date();
@@ -202,26 +204,45 @@ export default function Index() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">報告列表</h2>
-          <Button onClick={() => { setEditingReport(null); setIsFormOpen(true); }} className="gradient-primary">
-            <Plus className="h-4 w-4 mr-2" />
-            新增報告
-          </Button>
-        </div>
+        <Tabs defaultValue="sheet-data" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="sheet-data" className="gap-2">
+              <FileSpreadsheet className="h-4 w-4" />
+              Google Sheet 資料
+            </TabsTrigger>
+            <TabsTrigger value="my-reports" className="gap-2">
+              <List className="h-4 w-4" />
+              我的報告
+            </TabsTrigger>
+          </TabsList>
 
-        {isLoadingReports ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <ReportList 
-            reports={reports} 
-            onEdit={handleEdit} 
-            onDelete={handleDelete}
-            isDeleting={isDeleting}
-          />
-        )}
+          <TabsContent value="sheet-data">
+            <GoogleSheetDataDisplay />
+          </TabsContent>
+
+          <TabsContent value="my-reports">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">報告列表</h2>
+              <Button onClick={() => { setEditingReport(null); setIsFormOpen(true); }} className="gradient-primary">
+                <Plus className="h-4 w-4 mr-2" />
+                新增報告
+              </Button>
+            </div>
+
+            {isLoadingReports ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <ReportList 
+                reports={reports} 
+                onEdit={handleEdit} 
+                onDelete={handleDelete}
+                isDeleting={isDeleting}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Form Sheet */}

@@ -7,28 +7,27 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardList, User, Mail, Lock, Loader2 } from 'lucide-react';
+import { ClipboardList, User, Lock, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
 const loginSchema = z.object({
-  email: z.string().trim().email('請輸入有效的電郵地址'),
+  username: z.string().trim().min(2, '使用者名稱至少需要2個字元'),
   password: z.string().min(6, '密碼至少需要6個字元'),
 });
 
 const signupSchema = z.object({
   username: z.string().trim().min(2, '使用者名稱至少需要2個字元').max(50, '使用者名稱不能超過50個字元'),
-  email: z.string().trim().email('請輸入有效的電郵地址'),
   password: z.string().min(6, '密碼至少需要6個字元'),
 });
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, signIn, signUp, loading } = useAuth();
+  const { user, signInWithUsername, signUpWithUsername, loading } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [signupForm, setSignupForm] = useState({ username: '', email: '', password: '' });
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [signupForm, setSignupForm] = useState({ username: '', password: '' });
 
   useEffect(() => {
     if (user && !loading) {
@@ -50,13 +49,13 @@ export default function Auth() {
     }
 
     setIsSubmitting(true);
-    const { error } = await signIn(loginForm.email, loginForm.password);
+    const { error } = await signInWithUsername(loginForm.username, loginForm.password);
     setIsSubmitting(false);
 
     if (error) {
       toast({
         title: '登入失敗',
-        description: '電郵或密碼錯誤',
+        description: error.message || '使用者名稱或密碼錯誤',
         variant: 'destructive',
       });
     }
@@ -76,7 +75,7 @@ export default function Auth() {
     }
 
     setIsSubmitting(true);
-    const { error } = await signUp(signupForm.email, signupForm.password, signupForm.username);
+    const { error } = await signUpWithUsername(signupForm.username, signupForm.password);
     setIsSubmitting(false);
 
     if (error) {
@@ -110,7 +109,7 @@ export default function Auth() {
             <ClipboardList className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">工作報告系統</h1>
-          <p className="text-muted-foreground mt-2">登入以管理您的報告</p>
+          <p className="text-muted-foreground mt-2">使用使用者名稱登入以管理您的報告</p>
         </div>
 
         <Card className="shadow-elevated border-0">
@@ -124,16 +123,16 @@ export default function Auth() {
               <TabsContent value="login" className="mt-6">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">電郵地址</Label>
+                    <Label htmlFor="login-username">使用者名稱</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="your@email.com"
+                        id="login-username"
+                        type="text"
+                        placeholder="您的使用者名稱"
                         className="pl-10"
-                        value={loginForm.email}
-                        onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                        value={loginForm.username}
+                        onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
                       />
                     </div>
                   </div>
@@ -171,20 +170,6 @@ export default function Auth() {
                         className="pl-10"
                         value={signupForm.username}
                         onChange={(e) => setSignupForm({ ...signupForm, username: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">電郵地址</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="your@email.com"
-                        className="pl-10"
-                        value={signupForm.email}
-                        onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
                       />
                     </div>
                   </div>
