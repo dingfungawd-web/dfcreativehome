@@ -1,14 +1,283 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { Report, ReportFormData } from '@/types/report';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import ReportForm from '@/components/ReportForm';
+import ReportList from '@/components/ReportList';
+import { 
+  ClipboardList, Plus, LogOut, User, X, Loader2 
+} from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 
-const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+function generateReportCode(): string {
+  const now = new Date();
+  const date = now.toISOString().split('T')[0].replace(/-/g, '');
+  const time = now.toTimeString().slice(0, 5).replace(':', '');
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `${date}-${time}-${random}`;
+}
+
+export default function Index() {
+  const navigate = useNavigate();
+  const { user, username, loading, signOut } = useAuth();
+  const { toast } = useToast();
+  
+  const [reports, setReports] = useState<Report[]>([]);
+  const [isLoadingReports, setIsLoadingReports] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingReport, setEditingReport] = useState<Report | null>(null);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      fetchReports();
+    }
+  }, [user]);
+
+  const fetchReports = async () => {
+    if (!user) return;
+    
+    setIsLoadingReports(true);
+    const { data, error } = await supabase
+      .from('reports')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast({
+        title: '載入失敗',
+        description: '無法載入報告列表',
+        variant: 'destructive',
+      });
+    } else {
+      setReports(data as Report[]);
+    }
+    setIsLoadingReports(false);
+  };
+
+  const handleSubmit = async (formData: ReportFormData) => {
+    if (!user || !username) return;
+    
+    setIsSubmitting(true);
+
+    if (editingReport) {
+      // Update existing report
+      const { error } = await supabase
+        .from('reports')
+        .update({
+          ...formData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingReport.id);
+
+      if (error) {
+        toast({
+          title: '更新失敗',
+          description: '無法更新報告',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: '更新成功',
+          description: '報告已更新',
+        });
+        setIsFormOpen(false);
+        setEditingReport(null);
+        fetchReports();
+      }
+    } else {
+      // Create new report
+      const { error } = await supabase
+        .from('reports')
+        .insert({
+          user_id: user.id,
+          username: username,
+          report_code: generateReportCode(),
+          ...formData,
+        });
+
+      if (error) {
+        toast({
+          title: '提交失敗',
+          description: '無法提交報告',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: '提交成功',
+          description: '報告已成功提交',
+        });
+        setIsFormOpen(false);
+        fetchReports();
+      }
+    }
+    
+    setIsSubmitting(false);
+  };
+
+  const handleEdit = (report: Report) => {
+    setEditingReport(report);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    setIsDeleting(true);
+    const { error } = await supabase
+      .from('reports')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: '刪除失敗',
+        description: '無法刪除報告',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: '刪除成功',
+        description: '報告已刪除',
+      });
+      fetchReports();
+    }
+    setIsDeleting(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-card border-b shadow-sm">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+              <ClipboardList className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="font-semibold text-foreground">工作報告系統</h1>
+              <p className="text-xs text-muted-foreground">管理您的安裝報告</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">{username}</span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold">報告列表</h2>
+          <Button onClick={() => { setEditingReport(null); setIsFormOpen(true); }} className="gradient-primary">
+            <Plus className="h-4 w-4 mr-2" />
+            新增報告
+          </Button>
+        </div>
+
+        {isLoadingReports ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <ReportList 
+            reports={reports} 
+            onEdit={handleEdit} 
+            onDelete={handleDelete}
+            isDeleting={isDeleting}
+          />
+        )}
+      </main>
+
+      {/* Form Sheet */}
+      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+          <SheetHeader className="mb-6">
+            <SheetTitle className="flex items-center justify-between">
+              {editingReport ? '編輯報告' : '新增報告'}
+              <Button variant="ghost" size="icon" onClick={() => setIsFormOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </SheetTitle>
+          </SheetHeader>
+          <ReportForm 
+            initialData={editingReport ? {
+              report_date: editingReport.report_date,
+              team: editingReport.team || '',
+              installer_1: editingReport.installer_1 || '',
+              installer_2: editingReport.installer_2 || '',
+              installer_3: editingReport.installer_3 || '',
+              installer_4: editingReport.installer_4 || '',
+              install_address: editingReport.install_address || '',
+              install_payment_method: editingReport.install_payment_method || 'FPS',
+              install_amount: editingReport.install_amount,
+              install_notes: editingReport.install_notes || '',
+              install_material_open: editingReport.install_material_open,
+              install_material_replenish: editingReport.install_material_replenish,
+              measure_colleague: editingReport.measure_colleague || '',
+              install_doors: editingReport.install_doors,
+              install_windows: editingReport.install_windows,
+              install_aluminum: editingReport.install_aluminum,
+              install_old_removed: editingReport.install_old_removed,
+              order_address: editingReport.order_address || '',
+              order_payment_method: editingReport.order_payment_method || 'FPS',
+              order_amount: editingReport.order_amount,
+              order_data_type: editingReport.order_data_type || 'NewData',
+              order_material_open: editingReport.order_material_open,
+              order_material_replenish: editingReport.order_material_replenish,
+              order_reorder: editingReport.order_reorder,
+              order_measure_colleague: editingReport.order_measure_colleague || '',
+              order_reorder_location: editingReport.order_reorder_location || '',
+              order_notes: editingReport.order_notes || '',
+              responsibility_option: editingReport.responsibility_option || 'NONE',
+              urgency: editingReport.urgency || 'Normal',
+              install_difficulty: editingReport.install_difficulty || '',
+              order_install_doors: editingReport.order_install_doors,
+              order_install_windows: editingReport.order_install_windows,
+              order_install_aluminum: editingReport.order_install_aluminum,
+              order_old_removed: editingReport.order_old_removed,
+            } : undefined}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+            submitLabel={editingReport ? '更新報告' : '提交報告'}
+          />
+        </SheetContent>
+      </Sheet>
     </div>
   );
-};
-
-export default Index;
+}
