@@ -209,7 +209,11 @@ export default function Index() {
     const { completedCases, followUpCases, ...dbFormData } = formData;
     
     // Get username for Google Sheet sync
-    const currentUsername = username || '';
+    const currentUsername =
+      username ||
+      (user?.email?.endsWith('@internal.local')
+        ? user.email.split('@')[0]
+        : user?.email || '');
 
     if (editingReport) {
       // Update existing report with cases stored as JSON
