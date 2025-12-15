@@ -90,7 +90,7 @@ export default function Index() {
   };
 
   const handleSubmit = async (formData: ReportFormData) => {
-    if (!user || !username) return;
+    if (!user) return;
     
     setIsSubmitting(true);
 
@@ -118,7 +118,7 @@ export default function Index() {
         
         // Sync to Google Sheet
         syncToGoogleSheet({
-          name: username,
+          name: username || '',
           report_code: editingReport.report_code,
           ...formData
         });
@@ -134,7 +134,7 @@ export default function Index() {
         .from('reports')
         .insert({
           user_id: user.id,
-          username: username,
+          username: username || '',
           report_code: reportCode,
           ...formData,
         });
@@ -153,7 +153,7 @@ export default function Index() {
         
         // Sync to Google Sheet
         syncToGoogleSheet({
-          name: username,
+          name: username || '',
           report_code: reportCode,
           ...formData
         });
@@ -164,7 +164,6 @@ export default function Index() {
     
     setIsSubmitting(false);
   };
-
   const handleEdit = (report: Report) => {
     setEditingReport(report);
     setActiveTab('new-report');
