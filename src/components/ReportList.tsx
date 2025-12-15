@@ -155,7 +155,7 @@ function ReportDetails({ report }: { report: Report }) {
       {/* Installation Info */}
       <div className="space-y-3">
         <h4 className="font-semibold flex items-center gap-2">
-          <MapPin className="h-4 w-4" /> 安裝資料
+          <MapPin className="h-4 w-4" /> 已完成個案
         </h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div><span className="text-muted-foreground">地址：</span>{report.install_address || '-'}</div>
@@ -178,7 +178,7 @@ function ReportDetails({ report }: { report: Report }) {
 
       {/* Order Info */}
       <div className="space-y-3">
-        <h4 className="font-semibold">訂料資料</h4>
+        <h4 className="font-semibold">需跟進個案</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div><span className="text-muted-foreground">地址：</span>{report.order_address || '-'}</div>
           <div><span className="text-muted-foreground">付款方式：</span>{report.order_payment_method || '-'}</div>

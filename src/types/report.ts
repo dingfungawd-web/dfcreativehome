@@ -43,6 +43,40 @@ export interface Report {
   updated_at: string;
 }
 
+export interface CompletedCaseData {
+  address: string;
+  payment_method: string;
+  amount: number;
+  notes: string;
+  material_open: number;
+  material_replenish: number;
+  measure_colleague: string;
+  doors: number;
+  windows: number;
+  aluminum: number;
+  old_removed: number;
+}
+
+export interface FollowUpCaseData {
+  address: string;
+  payment_method: string;
+  amount: number;
+  data_type: string;
+  material_open: number;
+  material_replenish: number;
+  reorder: number;
+  measure_colleague: string;
+  reorder_location: string;
+  notes: string;
+  responsibility_option: string;
+  urgency: string;
+  install_difficulty: string;
+  doors: number;
+  windows: number;
+  aluminum: number;
+  old_removed: number;
+}
+
 export interface ReportFormData {
   report_date: string;
   team: string;
@@ -80,6 +114,9 @@ export interface ReportFormData {
   order_install_windows: number;
   order_install_aluminum: number;
   order_old_removed: number;
+  // Multiple cases for Google Sheet sync
+  completedCases?: CompletedCaseData[];
+  followUpCases?: FollowUpCaseData[];
 }
 
 export const PAYMENT_METHODS = ['FPS', 'WeChat', 'Alipay', '現金', '支票'];

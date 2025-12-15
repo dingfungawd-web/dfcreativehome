@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ReportFormData, PAYMENT_METHODS, DATA_TYPES, RESPONSIBILITY_OPTIONS, URGENCY_OPTIONS, INSTALLERS, MEASURERS } from '@/types/report';
+import { ReportFormData, CompletedCaseData, FollowUpCaseData, PAYMENT_METHODS, DATA_TYPES, RESPONSIBILITY_OPTIONS, URGENCY_OPTIONS, INSTALLERS, MEASURERS } from '@/types/report';
 import { Loader2, Building, CheckCircle, AlertCircle, Plus, Trash2, X } from 'lucide-react';
 
 interface ReportFormProps {
@@ -204,6 +204,45 @@ export default function ReportForm({ initialData, onSubmit, isSubmitting, submit
     const firstCompleted = completedCases[0] || createEmptyCompletedCase();
     const firstFollowUp = followUpCases[0] || createEmptyFollowUpCase();
     
+    // Convert all cases to proper format for sync
+    const allCompletedCases: CompletedCaseData[] = completedCases
+      .filter(c => c.address.trim() !== '') // Only include cases with address
+      .map(c => ({
+        address: c.address,
+        payment_method: c.payment_method,
+        amount: parseNum(c.amount),
+        notes: c.notes,
+        material_open: parseNum(c.material_open),
+        material_replenish: parseNum(c.material_replenish),
+        measure_colleague: c.measure_colleague,
+        doors: parseNum(c.doors),
+        windows: parseNum(c.windows),
+        aluminum: parseNum(c.aluminum),
+        old_removed: parseNum(c.old_removed),
+      }));
+
+    const allFollowUpCases: FollowUpCaseData[] = followUpCases
+      .filter(c => c.address.trim() !== '') // Only include cases with address
+      .map(c => ({
+        address: c.address,
+        payment_method: c.payment_method,
+        amount: parseNum(c.amount),
+        data_type: c.data_type,
+        material_open: parseNum(c.material_open),
+        material_replenish: parseNum(c.material_replenish),
+        reorder: parseNum(c.reorder),
+        measure_colleague: c.measure_colleague,
+        reorder_location: c.reorder_location,
+        notes: c.notes,
+        responsibility_option: c.responsibility_option,
+        urgency: c.urgency,
+        install_difficulty: c.install_difficulty,
+        doors: parseNum(c.doors),
+        windows: parseNum(c.windows),
+        aluminum: parseNum(c.aluminum),
+        old_removed: parseNum(c.old_removed),
+      }));
+    
     const submitData: ReportFormData = {
       ...formData,
       install_address: firstCompleted.address,
@@ -234,6 +273,9 @@ export default function ReportForm({ initialData, onSubmit, isSubmitting, submit
       order_install_windows: parseNum(firstFollowUp.windows),
       order_install_aluminum: parseNum(firstFollowUp.aluminum),
       order_old_removed: parseNum(firstFollowUp.old_removed),
+      // Include all cases for Google Sheet sync
+      completedCases: allCompletedCases,
+      followUpCases: allFollowUpCases,
     };
     
     await onSubmit(submitData);

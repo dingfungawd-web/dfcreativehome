@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Report, ReportFormData } from '@/types/report';
+import { Report, ReportFormData, CompletedCaseData, FollowUpCaseData } from '@/types/report';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import ReportForm from '@/components/ReportForm';
@@ -73,10 +73,120 @@ export default function Index() {
     setIsLoadingReports(false);
   };
 
-  const syncToGoogleSheet = async (reportData: Record<string, any>) => {
+  const syncToGoogleSheet = async (
+    basicInfo: {
+      name: string;
+      report_code: string;
+      report_date: string;
+      team: string;
+      installer_1: string;
+      installer_2: string;
+      installer_3: string;
+      installer_4: string;
+    },
+    completedCases: CompletedCaseData[],
+    followUpCases: FollowUpCaseData[]
+  ) => {
     try {
+      // Create rows for each case - each completed case and follow-up case gets its own row
+      const rows: Record<string, any>[] = [];
+      
+      // Add rows for completed cases (已完成個案)
+      completedCases.forEach(c => {
+        rows.push({
+          name: basicInfo.name,
+          report_code: basicInfo.report_code,
+          report_date: basicInfo.report_date,
+          team: basicInfo.team,
+          installer_1: basicInfo.installer_1,
+          installer_2: basicInfo.installer_2,
+          installer_3: basicInfo.installer_3,
+          installer_4: basicInfo.installer_4,
+          // Completed case fields (columns H-R)
+          install_address: c.address,
+          install_payment_method: c.payment_method,
+          install_amount: c.amount,
+          install_notes: c.notes,
+          install_material_open: c.material_open,
+          install_material_replenish: c.material_replenish,
+          measure_colleague: c.measure_colleague,
+          install_doors: c.doors,
+          install_windows: c.windows,
+          install_aluminum: c.aluminum,
+          install_old_removed: c.old_removed,
+          // Empty follow-up fields for completed cases
+          order_address: '',
+          order_payment_method: '',
+          order_amount: 0,
+          order_data_type: '',
+          order_material_open: 0,
+          order_material_replenish: 0,
+          order_reorder: 0,
+          order_measure_colleague: '',
+          order_reorder_location: '',
+          order_notes: '',
+          responsibility_option: '',
+          urgency: '',
+          install_difficulty: '',
+          order_install_doors: 0,
+          order_install_windows: 0,
+          order_install_aluminum: 0,
+          order_old_removed: 0,
+        });
+      });
+      
+      // Add rows for follow-up cases (需跟進個案)
+      followUpCases.forEach(c => {
+        rows.push({
+          name: basicInfo.name,
+          report_code: basicInfo.report_code,
+          report_date: basicInfo.report_date,
+          team: basicInfo.team,
+          installer_1: basicInfo.installer_1,
+          installer_2: basicInfo.installer_2,
+          installer_3: basicInfo.installer_3,
+          installer_4: basicInfo.installer_4,
+          // Empty completed case fields for follow-up cases
+          install_address: '',
+          install_payment_method: '',
+          install_amount: 0,
+          install_notes: '',
+          install_material_open: 0,
+          install_material_replenish: 0,
+          measure_colleague: '',
+          install_doors: 0,
+          install_windows: 0,
+          install_aluminum: 0,
+          install_old_removed: 0,
+          // Follow-up case fields (columns S-AI)
+          order_address: c.address,
+          order_payment_method: c.payment_method,
+          order_amount: c.amount,
+          order_data_type: c.data_type,
+          order_material_open: c.material_open,
+          order_material_replenish: c.material_replenish,
+          order_reorder: c.reorder,
+          order_measure_colleague: c.measure_colleague,
+          order_reorder_location: c.reorder_location,
+          order_notes: c.notes,
+          responsibility_option: c.responsibility_option,
+          urgency: c.urgency,
+          install_difficulty: c.install_difficulty,
+          order_install_doors: c.doors,
+          order_install_windows: c.windows,
+          order_install_aluminum: c.aluminum,
+          order_old_removed: c.old_removed,
+        });
+      });
+
+      // If no cases at all, still sync basic info
+      if (rows.length === 0) {
+        console.log('No cases to sync');
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('sync-to-sheet', {
-        body: { rows: [reportData] }
+        body: { rows }
       });
       
       if (error) {
@@ -94,12 +204,15 @@ export default function Index() {
     
     setIsSubmitting(true);
 
+    // Extract cases from formData (remove from database insert)
+    const { completedCases, followUpCases, ...dbFormData } = formData;
+
     if (editingReport) {
       // Update existing report
       const { error } = await supabase
         .from('reports')
         .update({
-          ...formData,
+          ...dbFormData,
           updated_at: new Date().toISOString(),
         })
         .eq('id', editingReport.id);
@@ -116,12 +229,21 @@ export default function Index() {
           description: '報告已更新',
         });
         
-        // Sync to Google Sheet
-        syncToGoogleSheet({
-          name: username || '',
-          report_code: editingReport.report_code,
-          ...formData
-        });
+        // Sync to Google Sheet - each case gets its own row
+        syncToGoogleSheet(
+          {
+            name: username || '',
+            report_code: editingReport.report_code,
+            report_date: formData.report_date,
+            team: formData.team,
+            installer_1: formData.installer_1,
+            installer_2: formData.installer_2,
+            installer_3: formData.installer_3,
+            installer_4: formData.installer_4,
+          },
+          completedCases || [],
+          followUpCases || []
+        );
         
         setEditingReport(null);
         setActiveTab('my-reports');
@@ -136,7 +258,7 @@ export default function Index() {
           user_id: user.id,
           username: username || '',
           report_code: reportCode,
-          ...formData,
+          ...dbFormData,
         });
 
       if (error) {
@@ -151,12 +273,21 @@ export default function Index() {
           description: '報告已成功提交',
         });
         
-        // Sync to Google Sheet
-        syncToGoogleSheet({
-          name: username || '',
-          report_code: reportCode,
-          ...formData
-        });
+        // Sync to Google Sheet - each case gets its own row
+        syncToGoogleSheet(
+          {
+            name: username || '',
+            report_code: reportCode,
+            report_date: formData.report_date,
+            team: formData.team,
+            installer_1: formData.installer_1,
+            installer_2: formData.installer_2,
+            installer_3: formData.installer_3,
+            installer_4: formData.installer_4,
+          },
+          completedCases || [],
+          followUpCases || []
+        );
         
         fetchReports();
       }
