@@ -73,6 +73,22 @@ export default function Index() {
     setIsLoadingReports(false);
   };
 
+  const syncToGoogleSheet = async (reportData: Record<string, any>) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-to-sheet', {
+        body: { rows: [reportData] }
+      });
+      
+      if (error) {
+        console.error('Google Sheet sync error:', error);
+      } else {
+        console.log('Google Sheet sync success:', data);
+      }
+    } catch (err) {
+      console.error('Failed to sync to Google Sheet:', err);
+    }
+  };
+
   const handleSubmit = async (formData: ReportFormData) => {
     if (!user || !username) return;
     
@@ -99,18 +115,27 @@ export default function Index() {
           title: '更新成功',
           description: '報告已更新',
         });
+        
+        // Sync to Google Sheet
+        syncToGoogleSheet({
+          name: username,
+          report_code: editingReport.report_code,
+          ...formData
+        });
+        
         setEditingReport(null);
         setActiveTab('my-reports');
         fetchReports();
       }
     } else {
       // Create new report
+      const reportCode = generateReportCode();
       const { error } = await supabase
         .from('reports')
         .insert({
           user_id: user.id,
           username: username,
-          report_code: generateReportCode(),
+          report_code: reportCode,
           ...formData,
         });
 
@@ -125,6 +150,14 @@ export default function Index() {
           title: '提交成功',
           description: '報告已成功提交',
         });
+        
+        // Sync to Google Sheet
+        syncToGoogleSheet({
+          name: username,
+          report_code: reportCode,
+          ...formData
+        });
+        
         fetchReports();
       }
     }
