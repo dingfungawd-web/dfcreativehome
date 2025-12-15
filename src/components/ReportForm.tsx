@@ -156,46 +156,94 @@ export default function ReportForm({ initialData, onSubmit, isSubmitting, submit
     ...initialData,
   });
 
-  // Multi-entry states
-  const [completedCases, setCompletedCases] = useState<CompletedCase[]>([
-    initialData?.install_address ? {
-      id: crypto.randomUUID(),
-      address: initialData.install_address || '',
-      payment_method: initialData.install_payment_method || '',
-      amount: formatNum(initialData.install_amount),
-      notes: initialData.install_notes || '',
-      material_open: formatNum(initialData.install_material_open),
-      material_replenish: formatNum(initialData.install_material_replenish),
-      measure_colleague: initialData.measure_colleague || '',
-      doors: formatNum(initialData.install_doors),
-      windows: formatNum(initialData.install_windows),
-      aluminum: formatNum(initialData.install_aluminum),
-      old_removed: formatNum(initialData.install_old_removed),
-    } : createEmptyCompletedCase()
-  ]);
+  // Multi-entry states - load from completedCases/followUpCases if available, otherwise fallback to legacy fields
+  const [completedCases, setCompletedCases] = useState<CompletedCase[]>(() => {
+    // First check if we have stored cases
+    if (initialData?.completedCases && Array.isArray(initialData.completedCases) && initialData.completedCases.length > 0) {
+      return initialData.completedCases.map(c => ({
+        id: crypto.randomUUID(),
+        address: c.address || '',
+        payment_method: c.payment_method || '',
+        amount: formatNum(c.amount),
+        notes: c.notes || '',
+        material_open: formatNum(c.material_open),
+        material_replenish: formatNum(c.material_replenish),
+        measure_colleague: c.measure_colleague || '',
+        doors: formatNum(c.doors),
+        windows: formatNum(c.windows),
+        aluminum: formatNum(c.aluminum),
+        old_removed: formatNum(c.old_removed),
+      }));
+    }
+    // Fallback to legacy single entry
+    if (initialData?.install_address) {
+      return [{
+        id: crypto.randomUUID(),
+        address: initialData.install_address || '',
+        payment_method: initialData.install_payment_method || '',
+        amount: formatNum(initialData.install_amount),
+        notes: initialData.install_notes || '',
+        material_open: formatNum(initialData.install_material_open),
+        material_replenish: formatNum(initialData.install_material_replenish),
+        measure_colleague: initialData.measure_colleague || '',
+        doors: formatNum(initialData.install_doors),
+        windows: formatNum(initialData.install_windows),
+        aluminum: formatNum(initialData.install_aluminum),
+        old_removed: formatNum(initialData.install_old_removed),
+      }];
+    }
+    return [createEmptyCompletedCase()];
+  });
 
-  const [followUpCases, setFollowUpCases] = useState<FollowUpCase[]>([
-    initialData?.order_address ? {
-      id: crypto.randomUUID(),
-      address: initialData.order_address || '',
-      payment_method: initialData.order_payment_method || '',
-      amount: formatNum(initialData.order_amount),
-      data_type: initialData.order_data_type || '',
-      material_open: formatNum(initialData.order_material_open),
-      material_replenish: formatNum(initialData.order_material_replenish),
-      reorder: formatNum(initialData.order_reorder),
-      measure_colleague: initialData.order_measure_colleague || '',
-      reorder_location: initialData.order_reorder_location || '',
-      notes: initialData.order_notes || '',
-      responsibility_option: initialData.responsibility_option || '',
-      urgency: initialData.urgency || '',
-      install_difficulty: initialData.install_difficulty || '',
-      doors: formatNum(initialData.order_install_doors),
-      windows: formatNum(initialData.order_install_windows),
-      aluminum: formatNum(initialData.order_install_aluminum),
-      old_removed: formatNum(initialData.order_old_removed),
-    } : createEmptyFollowUpCase()
-  ]);
+  const [followUpCases, setFollowUpCases] = useState<FollowUpCase[]>(() => {
+    // First check if we have stored cases
+    if (initialData?.followUpCases && Array.isArray(initialData.followUpCases) && initialData.followUpCases.length > 0) {
+      return initialData.followUpCases.map(c => ({
+        id: crypto.randomUUID(),
+        address: c.address || '',
+        payment_method: c.payment_method || '',
+        amount: formatNum(c.amount),
+        data_type: c.data_type || '',
+        material_open: formatNum(c.material_open),
+        material_replenish: formatNum(c.material_replenish),
+        reorder: formatNum(c.reorder),
+        measure_colleague: c.measure_colleague || '',
+        reorder_location: c.reorder_location || '',
+        notes: c.notes || '',
+        responsibility_option: c.responsibility_option || '',
+        urgency: c.urgency || '',
+        install_difficulty: c.install_difficulty || '',
+        doors: formatNum(c.doors),
+        windows: formatNum(c.windows),
+        aluminum: formatNum(c.aluminum),
+        old_removed: formatNum(c.old_removed),
+      }));
+    }
+    // Fallback to legacy single entry
+    if (initialData?.order_address) {
+      return [{
+        id: crypto.randomUUID(),
+        address: initialData.order_address || '',
+        payment_method: initialData.order_payment_method || '',
+        amount: formatNum(initialData.order_amount),
+        data_type: initialData.order_data_type || '',
+        material_open: formatNum(initialData.order_material_open),
+        material_replenish: formatNum(initialData.order_material_replenish),
+        reorder: formatNum(initialData.order_reorder),
+        measure_colleague: initialData.order_measure_colleague || '',
+        reorder_location: initialData.order_reorder_location || '',
+        notes: initialData.order_notes || '',
+        responsibility_option: initialData.responsibility_option || '',
+        urgency: initialData.urgency || '',
+        install_difficulty: initialData.install_difficulty || '',
+        doors: formatNum(initialData.order_install_doors),
+        windows: formatNum(initialData.order_install_windows),
+        aluminum: formatNum(initialData.order_install_aluminum),
+        old_removed: formatNum(initialData.order_old_removed),
+      }];
+    }
+    return [createEmptyFollowUpCase()];
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

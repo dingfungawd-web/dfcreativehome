@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Report, ReportFormData, CompletedCaseData, FollowUpCaseData } from '@/types/report';
+import type { Json } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import ReportForm from '@/components/ReportForm';
@@ -68,7 +69,7 @@ export default function Index() {
         variant: 'destructive',
       });
     } else {
-      setReports(data as Report[]);
+      setReports(data as unknown as Report[]);
     }
     setIsLoadingReports(false);
   };
@@ -204,15 +205,20 @@ export default function Index() {
     
     setIsSubmitting(true);
 
-    // Extract cases from formData (remove from database insert)
+    // Extract cases from formData
     const { completedCases, followUpCases, ...dbFormData } = formData;
+    
+    // Get username for Google Sheet sync
+    const currentUsername = username || '';
 
     if (editingReport) {
-      // Update existing report
+      // Update existing report with cases stored as JSON
       const { error } = await supabase
         .from('reports')
         .update({
           ...dbFormData,
+          completed_cases: (completedCases || []) as unknown as Json,
+          follow_up_cases: (followUpCases || []) as unknown as Json,
           updated_at: new Date().toISOString(),
         })
         .eq('id', editingReport.id);
@@ -232,7 +238,7 @@ export default function Index() {
         // Sync to Google Sheet - each case gets its own row
         syncToGoogleSheet(
           {
-            name: username || '',
+            name: currentUsername,
             report_code: editingReport.report_code,
             report_date: formData.report_date,
             team: formData.team,
@@ -250,16 +256,51 @@ export default function Index() {
         fetchReports();
       }
     } else {
-      // Create new report
+      // Create new report with cases stored as JSON
       const reportCode = generateReportCode();
       const { error } = await supabase
         .from('reports')
-        .insert({
+        .insert([{
           user_id: user.id,
-          username: username || '',
+          username: currentUsername,
           report_code: reportCode,
-          ...dbFormData,
-        });
+          report_date: dbFormData.report_date,
+          team: dbFormData.team,
+          installer_1: dbFormData.installer_1,
+          installer_2: dbFormData.installer_2,
+          installer_3: dbFormData.installer_3,
+          installer_4: dbFormData.installer_4,
+          install_address: dbFormData.install_address,
+          install_payment_method: dbFormData.install_payment_method,
+          install_amount: dbFormData.install_amount,
+          install_notes: dbFormData.install_notes,
+          install_material_open: dbFormData.install_material_open,
+          install_material_replenish: dbFormData.install_material_replenish,
+          measure_colleague: dbFormData.measure_colleague,
+          install_doors: dbFormData.install_doors,
+          install_windows: dbFormData.install_windows,
+          install_aluminum: dbFormData.install_aluminum,
+          install_old_removed: dbFormData.install_old_removed,
+          order_address: dbFormData.order_address,
+          order_payment_method: dbFormData.order_payment_method,
+          order_amount: dbFormData.order_amount,
+          order_data_type: dbFormData.order_data_type,
+          order_material_open: dbFormData.order_material_open,
+          order_material_replenish: dbFormData.order_material_replenish,
+          order_reorder: dbFormData.order_reorder,
+          order_measure_colleague: dbFormData.order_measure_colleague,
+          order_reorder_location: dbFormData.order_reorder_location,
+          order_notes: dbFormData.order_notes,
+          responsibility_option: dbFormData.responsibility_option,
+          urgency: dbFormData.urgency,
+          install_difficulty: dbFormData.install_difficulty,
+          order_install_doors: dbFormData.order_install_doors,
+          order_install_windows: dbFormData.order_install_windows,
+          order_install_aluminum: dbFormData.order_install_aluminum,
+          order_old_removed: dbFormData.order_old_removed,
+          completed_cases: (completedCases || []) as unknown as Json,
+          follow_up_cases: (followUpCases || []) as unknown as Json,
+        }]);
 
       if (error) {
         toast({
@@ -276,7 +317,7 @@ export default function Index() {
         // Sync to Google Sheet - each case gets its own row
         syncToGoogleSheet(
           {
-            name: username || '',
+            name: currentUsername,
             report_code: reportCode,
             report_date: formData.report_date,
             team: formData.team,
@@ -402,7 +443,7 @@ export default function Index() {
                 installer_3: editingReport.installer_3 || '',
                 installer_4: editingReport.installer_4 || '',
                 install_address: editingReport.install_address || '',
-                install_payment_method: editingReport.install_payment_method || 'FPS',
+                install_payment_method: editingReport.install_payment_method || '',
                 install_amount: editingReport.install_amount,
                 install_notes: editingReport.install_notes || '',
                 install_material_open: editingReport.install_material_open,
@@ -413,22 +454,25 @@ export default function Index() {
                 install_aluminum: editingReport.install_aluminum,
                 install_old_removed: editingReport.install_old_removed,
                 order_address: editingReport.order_address || '',
-                order_payment_method: editingReport.order_payment_method || 'FPS',
+                order_payment_method: editingReport.order_payment_method || '',
                 order_amount: editingReport.order_amount,
-                order_data_type: editingReport.order_data_type || 'NewData',
+                order_data_type: editingReport.order_data_type || '',
                 order_material_open: editingReport.order_material_open,
                 order_material_replenish: editingReport.order_material_replenish,
                 order_reorder: editingReport.order_reorder,
                 order_measure_colleague: editingReport.order_measure_colleague || '',
                 order_reorder_location: editingReport.order_reorder_location || '',
                 order_notes: editingReport.order_notes || '',
-                responsibility_option: editingReport.responsibility_option || 'NONE',
-                urgency: editingReport.urgency || 'Normal',
+                responsibility_option: editingReport.responsibility_option || '',
+                urgency: editingReport.urgency || '',
                 install_difficulty: editingReport.install_difficulty || '',
                 order_install_doors: editingReport.order_install_doors,
                 order_install_windows: editingReport.order_install_windows,
                 order_install_aluminum: editingReport.order_install_aluminum,
                 order_old_removed: editingReport.order_old_removed,
+                // Pass stored cases for editing
+                completedCases: editingReport.completed_cases,
+                followUpCases: editingReport.follow_up_cases,
               } : undefined}
               onSubmit={handleSubmit}
               isSubmitting={isSubmitting}

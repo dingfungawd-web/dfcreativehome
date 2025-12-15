@@ -37,7 +37,9 @@ export type Database = {
       }
       reports: {
         Row: {
+          completed_cases: Json | null
           created_at: string
+          follow_up_cases: Json | null
           id: string
           install_address: string | null
           install_aluminum: number | null
@@ -79,7 +81,9 @@ export type Database = {
           username: string
         }
         Insert: {
+          completed_cases?: Json | null
           created_at?: string
+          follow_up_cases?: Json | null
           id?: string
           install_address?: string | null
           install_aluminum?: number | null
@@ -121,7 +125,9 @@ export type Database = {
           username: string
         }
         Update: {
+          completed_cases?: Json | null
           created_at?: string
+          follow_up_cases?: Json | null
           id?: string
           install_address?: string | null
           install_aluminum?: number | null
