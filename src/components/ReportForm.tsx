@@ -524,12 +524,12 @@ export default function ReportForm({ initialData, onSubmit, isSubmitting, submit
                 </div>
                 <div className="space-y-2">
                   <Label>訂料數據</Label>
-                  <Select value={caseItem.data_type} onValueChange={(v) => updateFollowUpCase(caseItem.id, 'data_type', v)}>
+                  <Select value={caseItem.data_type || '_none'} onValueChange={(v) => updateFollowUpCase(caseItem.id, 'data_type', v === '_none' ? '' : v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="選擇類型（可選）" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">空白</SelectItem>
+                      <SelectItem value="_none">空白</SelectItem>
                       {DATA_TYPES.map(t => (
                         <SelectItem key={t} value={t}>{t}</SelectItem>
                       ))}
@@ -592,12 +592,12 @@ export default function ReportForm({ initialData, onSubmit, isSubmitting, submit
                 </div>
                 <div className="space-y-2">
                   <Label>責任選項</Label>
-                  <Select value={caseItem.responsibility_option} onValueChange={(v) => updateFollowUpCase(caseItem.id, 'responsibility_option', v)}>
+                  <Select value={caseItem.responsibility_option || '_none'} onValueChange={(v) => updateFollowUpCase(caseItem.id, 'responsibility_option', v === '_none' ? '' : v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="選擇選項" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">空白</SelectItem>
+                      <SelectItem value="_none">空白</SelectItem>
                       {RESPONSIBILITY_OPTIONS.map(r => (
                         <SelectItem key={r} value={r}>{r}</SelectItem>
                       ))}
@@ -606,12 +606,12 @@ export default function ReportForm({ initialData, onSubmit, isSubmitting, submit
                 </div>
                 <div className="space-y-2">
                   <Label>正常/加急</Label>
-                  <Select value={caseItem.urgency} onValueChange={(v) => updateFollowUpCase(caseItem.id, 'urgency', v)}>
+                  <Select value={caseItem.urgency || '_none'} onValueChange={(v) => updateFollowUpCase(caseItem.id, 'urgency', v === '_none' ? '' : v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="選擇選項" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">空白</SelectItem>
+                      <SelectItem value="_none">空白</SelectItem>
                       {URGENCY_OPTIONS.map(u => (
                         <SelectItem key={u} value={u}>{u}</SelectItem>
                       ))}
