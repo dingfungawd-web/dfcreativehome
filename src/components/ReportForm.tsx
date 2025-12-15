@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ReportFormData, PAYMENT_METHODS, DATA_TYPES, RESPONSIBILITY_OPTIONS, URGENCY_OPTIONS, INSTALLERS, MEASURERS } from '@/types/report';
-import { Loader2, Building, CheckCircle, AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Building, CheckCircle, AlertCircle, Plus, Trash2, X } from 'lucide-react';
 
 interface ReportFormProps {
   initialData?: Partial<ReportFormData>;
@@ -304,24 +304,43 @@ export default function ReportForm({ initialData, onSubmit, isSubmitting, submit
           <Separator />
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(num => (
-              <div key={num} className="space-y-2">
-                <Label>安裝同事{num}</Label>
-                <Select 
-                  value={formData[`installer_${num}` as keyof ReportFormData] as string} 
-                  onValueChange={(v) => updateField(`installer_${num}` as keyof ReportFormData, v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="選擇同事" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INSTALLERS.map(c => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
+            {[1, 2, 3, 4].map(num => {
+              const fieldKey = `installer_${num}` as keyof ReportFormData;
+              const currentValue = formData[fieldKey] as string;
+              return (
+                <div key={num} className="space-y-2">
+                  <Label>安裝同事{num}</Label>
+                  <div className="flex gap-1">
+                    <Select 
+                      value={currentValue || '_none'} 
+                      onValueChange={(v) => updateField(fieldKey, v === '_none' ? '' : v)}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="選擇同事" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">-- 未選擇 --</SelectItem>
+                        {INSTALLERS.map(c => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {currentValue && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon"
+                        className="shrink-0 h-10 w-10 text-muted-foreground hover:text-destructive"
+                        onClick={() => updateField(fieldKey, '')}
+                        title="清除選擇"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
