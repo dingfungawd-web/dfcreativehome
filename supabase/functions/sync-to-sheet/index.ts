@@ -22,7 +22,13 @@ serve(async (req) => {
 
     const { rows } = await req.json();
     
-    console.log('Syncing to Google Sheet:', JSON.stringify(rows, null, 2));
+    console.log('=== Syncing to Google Sheet ===');
+    console.log('Number of rows:', rows?.length || 0);
+    if (rows && rows.length > 0) {
+      console.log('First row name field:', rows[0].name);
+      console.log('First row keys:', Object.keys(rows[0]).join(', '));
+    }
+    console.log('Full payload:', JSON.stringify(rows, null, 2));
 
     // Send data to Google Apps Script
     const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Report } from '@/types/report';
+import { Report, CompletedCaseData, FollowUpCaseData } from '@/types/report';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -135,6 +135,45 @@ export default function ReportList({ reports, onEdit, onDelete, isDeleting }: Re
 }
 
 function ReportDetails({ report }: { report: Report }) {
+  // Get cases from JSON columns, fallback to legacy single-entry fields
+  const completedCases: CompletedCaseData[] = report.completed_cases && Array.isArray(report.completed_cases) && report.completed_cases.length > 0
+    ? report.completed_cases
+    : report.install_address ? [{
+        address: report.install_address || '',
+        payment_method: report.install_payment_method || '',
+        amount: report.install_amount || 0,
+        notes: report.install_notes || '',
+        material_open: report.install_material_open || 0,
+        material_replenish: report.install_material_replenish || 0,
+        measure_colleague: report.measure_colleague || '',
+        doors: report.install_doors || 0,
+        windows: report.install_windows || 0,
+        aluminum: report.install_aluminum || 0,
+        old_removed: report.install_old_removed || 0,
+      }] : [];
+
+  const followUpCases: FollowUpCaseData[] = report.follow_up_cases && Array.isArray(report.follow_up_cases) && report.follow_up_cases.length > 0
+    ? report.follow_up_cases
+    : report.order_address ? [{
+        address: report.order_address || '',
+        payment_method: report.order_payment_method || '',
+        amount: report.order_amount || 0,
+        data_type: report.order_data_type || '',
+        material_open: report.order_material_open || 0,
+        material_replenish: report.order_material_replenish || 0,
+        reorder: report.order_reorder || 0,
+        measure_colleague: report.order_measure_colleague || '',
+        reorder_location: report.order_reorder_location || '',
+        notes: report.order_notes || '',
+        responsibility_option: report.responsibility_option || '',
+        urgency: report.urgency || '',
+        install_difficulty: report.install_difficulty || '',
+        doors: report.order_install_doors || 0,
+        windows: report.order_install_windows || 0,
+        aluminum: report.order_install_aluminum || 0,
+        old_removed: report.order_old_removed || 0,
+      }] : [];
+
   return (
     <div className="space-y-6">
       {/* Basic Info */}
@@ -152,45 +191,75 @@ function ReportDetails({ report }: { report: Report }) {
         </div>
       </div>
 
-      {/* Installation Info */}
+      {/* Completed Cases (已完成個案) */}
       <div className="space-y-3">
         <h4 className="font-semibold flex items-center gap-2">
-          <MapPin className="h-4 w-4" /> 已完成個案
+          <MapPin className="h-4 w-4" /> 已完成個案 ({completedCases.length})
         </h4>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><span className="text-muted-foreground">地址：</span>{report.install_address || '-'}</div>
-          <div><span className="text-muted-foreground">付款方式：</span>{report.install_payment_method || '-'}</div>
-          <div><span className="text-muted-foreground">金額：</span>${report.install_amount.toLocaleString()}</div>
-          <div><span className="text-muted-foreground">度尺同事：</span>{report.measure_colleague || '-'}</div>
-          <div><span className="text-muted-foreground">開料數：</span>{report.install_material_open}</div>
-          <div><span className="text-muted-foreground">補料數：</span>{report.install_material_replenish}</div>
-          <div><span className="text-muted-foreground">安裝門數：</span>{report.install_doors}</div>
-          <div><span className="text-muted-foreground">安裝窗數：</span>{report.install_windows}</div>
-          <div><span className="text-muted-foreground">安裝鋁料數：</span>{report.install_aluminum}</div>
-          <div><span className="text-muted-foreground">拆舊數：</span>{report.install_old_removed}</div>
-        </div>
-        {report.install_notes && (
-          <div className="text-sm">
-            <span className="text-muted-foreground">備註：</span>{report.install_notes}
-          </div>
+        {completedCases.length === 0 ? (
+          <p className="text-sm text-muted-foreground">無已完成個案</p>
+        ) : (
+          completedCases.map((c, idx) => (
+            <div key={idx} className="p-3 border rounded-lg bg-muted/30 space-y-2">
+              <div className="font-medium text-sm text-muted-foreground">個案 {idx + 1}</div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><span className="text-muted-foreground">地址：</span>{c.address || '-'}</div>
+                <div><span className="text-muted-foreground">付款方式：</span>{c.payment_method || '-'}</div>
+                <div><span className="text-muted-foreground">金額：</span>${(c.amount || 0).toLocaleString()}</div>
+                <div><span className="text-muted-foreground">度尺同事：</span>{c.measure_colleague || '-'}</div>
+                <div><span className="text-muted-foreground">開料數：</span>{c.material_open || 0}</div>
+                <div><span className="text-muted-foreground">補料數：</span>{c.material_replenish || 0}</div>
+                <div><span className="text-muted-foreground">安裝門數：</span>{c.doors || 0}</div>
+                <div><span className="text-muted-foreground">安裝窗數：</span>{c.windows || 0}</div>
+                <div><span className="text-muted-foreground">安裝鋁料數：</span>{c.aluminum || 0}</div>
+                <div><span className="text-muted-foreground">拆舊數：</span>{c.old_removed || 0}</div>
+              </div>
+              {c.notes && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground">備註：</span>{c.notes}
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
 
-      {/* Order Info */}
+      {/* Follow-up Cases (需跟進個案) */}
       <div className="space-y-3">
-        <h4 className="font-semibold">需跟進個案</h4>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><span className="text-muted-foreground">地址：</span>{report.order_address || '-'}</div>
-          <div><span className="text-muted-foreground">付款方式：</span>{report.order_payment_method || '-'}</div>
-          <div><span className="text-muted-foreground">金額：</span>${report.order_amount.toLocaleString()}</div>
-          <div><span className="text-muted-foreground">數據類型：</span>{report.order_data_type || '-'}</div>
-          <div><span className="text-muted-foreground">責任：</span>{report.responsibility_option || '-'}</div>
-          <div><span className="text-muted-foreground">緊急程度：</span>{report.urgency || '-'}</div>
-        </div>
-        {report.order_notes && (
-          <div className="text-sm">
-            <span className="text-muted-foreground">備註：</span>{report.order_notes}
-          </div>
+        <h4 className="font-semibold">需跟進個案 ({followUpCases.length})</h4>
+        {followUpCases.length === 0 ? (
+          <p className="text-sm text-muted-foreground">無需跟進個案</p>
+        ) : (
+          followUpCases.map((c, idx) => (
+            <div key={idx} className="p-3 border rounded-lg bg-muted/30 space-y-2">
+              <div className="font-medium text-sm text-muted-foreground">個案 {idx + 1}</div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><span className="text-muted-foreground">地址：</span>{c.address || '-'}</div>
+                <div><span className="text-muted-foreground">付款方式：</span>{c.payment_method || '-'}</div>
+                <div><span className="text-muted-foreground">金額：</span>${(c.amount || 0).toLocaleString()}</div>
+                <div><span className="text-muted-foreground">數據類型：</span>{c.data_type || '-'}</div>
+                <div><span className="text-muted-foreground">責任：</span>{c.responsibility_option || '-'}</div>
+                <div><span className="text-muted-foreground">緊急程度：</span>{c.urgency || '-'}</div>
+                <div><span className="text-muted-foreground">度尺同事：</span>{c.measure_colleague || '-'}</div>
+                <div><span className="text-muted-foreground">重訂數：</span>{c.reorder || 0}</div>
+                <div><span className="text-muted-foreground">重訂位置：</span>{c.reorder_location || '-'}</div>
+                <div><span className="text-muted-foreground">安裝門數：</span>{c.doors || 0}</div>
+                <div><span className="text-muted-foreground">安裝窗數：</span>{c.windows || 0}</div>
+                <div><span className="text-muted-foreground">安裝鋁料數：</span>{c.aluminum || 0}</div>
+                <div><span className="text-muted-foreground">拆舊數：</span>{c.old_removed || 0}</div>
+              </div>
+              {c.notes && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground">備註：</span>{c.notes}
+                </div>
+              )}
+              {c.install_difficulty && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground">安裝難處：</span>{c.install_difficulty}
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
     </div>

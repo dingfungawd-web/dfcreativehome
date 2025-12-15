@@ -9,7 +9,7 @@ export interface Report {
   installer_2: string | null;
   installer_3: string | null;
   installer_4: string | null;
-  // Installation section (已完成個案)
+  // Installation section (已完成個案) - legacy single entry
   install_address: string | null;
   install_payment_method: string | null;
   install_amount: number;
@@ -21,7 +21,7 @@ export interface Report {
   install_windows: number;
   install_aluminum: number;
   install_old_removed: number;
-  // Order section (需跟進個案)
+  // Order section (需跟進個案) - legacy single entry
   order_address: string | null;
   order_payment_method: string | null;
   order_amount: number;
@@ -39,6 +39,9 @@ export interface Report {
   order_install_windows: number;
   order_install_aluminum: number;
   order_old_removed: number;
+  // Multiple cases stored as JSON
+  completed_cases?: CompletedCaseData[];
+  follow_up_cases?: FollowUpCaseData[];
   created_at: string;
   updated_at: string;
 }
