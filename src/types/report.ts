@@ -9,7 +9,7 @@ export interface Report {
   installer_2: string | null;
   installer_3: string | null;
   installer_4: string | null;
-  // Installation section
+  // Installation section (已完成個案)
   install_address: string | null;
   install_payment_method: string | null;
   install_amount: number;
@@ -21,7 +21,7 @@ export interface Report {
   install_windows: number;
   install_aluminum: number;
   install_old_removed: number;
-  // Order section
+  // Order section (需跟進個案)
   order_address: string | null;
   order_payment_method: string | null;
   order_amount: number;
@@ -50,7 +50,7 @@ export interface ReportFormData {
   installer_2: string;
   installer_3: string;
   installer_4: string;
-  // Installation section
+  // Installation section (已完成個案)
   install_address: string;
   install_payment_method: string;
   install_amount: number;
@@ -62,7 +62,7 @@ export interface ReportFormData {
   install_windows: number;
   install_aluminum: number;
   install_old_removed: number;
-  // Order section
+  // Order section (需跟進個案)
   order_address: string;
   order_payment_method: string;
   order_amount: number;
@@ -87,7 +87,28 @@ export const DATA_TYPES = ['NewData', 'OldData'];
 export const RESPONSIBILITY_OPTIONS = ['NONE', 'FactoryResponsible', 'InstallerResponsible'];
 export const URGENCY_OPTIONS = ['Normal', 'Urgent'];
 export const TEAMS = ['A', 'B', 'C', 'D', 'E', 'S', 'Z'];
-export const COLLEAGUES = [
-  '羅慶文', '張均全', '黃雪松', '張文浩', '黃禮然',
-  '何家俊', '洪旭東', '黃榮基', '張佩樺'
+
+// 安裝同事名稱列表
+export const INSTALLERS = [
+  '羅慶文',
+  '張均全',
+  '黃雪松',
+  '文俊傑',
+  '張文浩',
+  '黃禮然',
+  '廖寶山',
+  '邱梓峰',
+  '馬明輝',
 ];
+
+// 度呎同事名稱列表
+export const MEASURERS = [
+  '陳志誠',
+  '洪旭東',
+  '何家俊',
+  '張佩樺',
+  '楊彬',
+];
+
+// Legacy export for backwards compatibility
+export const COLLEAGUES = [...INSTALLERS, ...MEASURERS];
