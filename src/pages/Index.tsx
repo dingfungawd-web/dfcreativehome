@@ -93,10 +93,10 @@ export default function Index() {
       const rows: Record<string, any>[] = [];
       
       // Add rows for completed cases (已完成個案)
+      // Column order: A=name, B=report_date, C=team, D-G=installers, H-R=completed, S-AI=follow-up, AJ=report_code
       completedCases.forEach(c => {
         rows.push({
           name: basicInfo.name,
-          report_code: basicInfo.report_code,
           report_date: basicInfo.report_date,
           team: basicInfo.team,
           installer_1: basicInfo.installer_1,
@@ -115,7 +115,7 @@ export default function Index() {
           install_windows: c.windows,
           install_aluminum: c.aluminum,
           install_old_removed: c.old_removed,
-          // Empty follow-up fields for completed cases
+          // Empty follow-up fields for completed cases (columns S-AI)
           order_address: '',
           order_payment_method: '',
           order_amount: 0,
@@ -133,21 +133,23 @@ export default function Index() {
           order_install_windows: 0,
           order_install_aluminum: 0,
           order_old_removed: 0,
+          // Report code at the end (column AJ)
+          report_code: basicInfo.report_code,
         });
       });
       
       // Add rows for follow-up cases (需跟進個案)
+      // Column order: A=name, B=report_date, C=team, D-G=installers, H-R=completed, S-AI=follow-up, AJ=report_code
       followUpCases.forEach(c => {
         rows.push({
           name: basicInfo.name,
-          report_code: basicInfo.report_code,
           report_date: basicInfo.report_date,
           team: basicInfo.team,
           installer_1: basicInfo.installer_1,
           installer_2: basicInfo.installer_2,
           installer_3: basicInfo.installer_3,
           installer_4: basicInfo.installer_4,
-          // Empty completed case fields for follow-up cases
+          // Empty completed case fields for follow-up cases (columns H-R)
           install_address: '',
           install_payment_method: '',
           install_amount: 0,
@@ -177,6 +179,8 @@ export default function Index() {
           order_install_windows: c.windows,
           order_install_aluminum: c.aluminum,
           order_old_removed: c.old_removed,
+          // Report code at the end (column AJ)
+          report_code: basicInfo.report_code,
         });
       });
 
