@@ -62,14 +62,15 @@ serve(async (req) => {
       updated_at: new Date().toISOString(),
     };
 
-    // Map fields from sheet to database
+    // Map base fields from sheet to database
     if (data.report_date !== undefined) updateData.report_date = data.report_date || null;
     if (data.team !== undefined) updateData.team = data.team || null;
     if (data.installer_1 !== undefined) updateData.installer_1 = data.installer_1 || null;
     if (data.installer_2 !== undefined) updateData.installer_2 = data.installer_2 || null;
     if (data.installer_3 !== undefined) updateData.installer_3 = data.installer_3 || null;
     if (data.installer_4 !== undefined) updateData.installer_4 = data.installer_4 || null;
-    
+
+    // Keep legacy single-row columns updated too (for backward compatibility)
     // Completed case fields (H-R)
     if (data.install_address !== undefined) updateData.install_address = data.install_address || null;
     if (data.install_payment_method !== undefined) updateData.install_payment_method = data.install_payment_method || null;
@@ -82,7 +83,7 @@ serve(async (req) => {
     if (data.install_windows !== undefined) updateData.install_windows = parseNumeric(data.install_windows);
     if (data.install_aluminum !== undefined) updateData.install_aluminum = parseNumeric(data.install_aluminum);
     if (data.install_old_removed !== undefined) updateData.install_old_removed = parseNumeric(data.install_old_removed);
-    
+
     // Follow-up case fields (S-AI)
     if (data.order_address !== undefined) updateData.order_address = data.order_address || null;
     if (data.order_payment_method !== undefined) updateData.order_payment_method = data.order_payment_method || null;
@@ -101,6 +102,62 @@ serve(async (req) => {
     if (data.order_install_windows !== undefined) updateData.order_install_windows = parseNumeric(data.order_install_windows);
     if (data.order_install_aluminum !== undefined) updateData.order_install_aluminum = parseNumeric(data.order_install_aluminum);
     if (data.order_old_removed !== undefined) updateData.order_old_removed = parseNumeric(data.order_old_removed);
+
+    // If Apps Script provides which case row was edited, also update JSON arrays used by the UI
+    const caseType: string | undefined = data.case_type;
+    const caseIndexRaw = data.case_index;
+    const caseIndex = typeof caseIndexRaw === 'number' ? caseIndexRaw : Number.isFinite(Number(caseIndexRaw)) ? Number(caseIndexRaw) : null;
+
+    if (caseType && caseIndex !== null && caseIndex >= 0) {
+      const completed = Array.isArray(existingReport.completed_cases) ? [...existingReport.completed_cases] : [];
+      const followUp = Array.isArray(existingReport.follow_up_cases) ? [...existingReport.follow_up_cases] : [];
+
+      if (caseType === 'completed') {
+        while (completed.length <= caseIndex) completed.push({});
+        const prev = (completed[caseIndex] ?? {}) as Record<string, any>;
+        completed[caseIndex] = {
+          ...prev,
+          address: data.install_address ?? prev.address ?? '',
+          payment_method: data.install_payment_method ?? prev.payment_method ?? '',
+          amount: parseNumeric(data.install_amount) ?? prev.amount ?? null,
+          notes: data.install_notes ?? prev.notes ?? '',
+          material_open: parseNumeric(data.install_material_open) ?? prev.material_open ?? null,
+          material_replenish: parseNumeric(data.install_material_replenish) ?? prev.material_replenish ?? null,
+          measure_colleague: data.measure_colleague ?? prev.measure_colleague ?? '',
+          doors: parseNumeric(data.install_doors) ?? prev.doors ?? null,
+          windows: parseNumeric(data.install_windows) ?? prev.windows ?? null,
+          aluminum: parseNumeric(data.install_aluminum) ?? prev.aluminum ?? null,
+          old_removed: parseNumeric(data.install_old_removed) ?? prev.old_removed ?? null,
+        };
+        updateData.completed_cases = completed;
+      }
+
+      if (caseType === 'follow_up') {
+        while (followUp.length <= caseIndex) followUp.push({});
+        const prev = (followUp[caseIndex] ?? {}) as Record<string, any>;
+        followUp[caseIndex] = {
+          ...prev,
+          address: data.order_address ?? prev.address ?? '',
+          payment_method: data.order_payment_method ?? prev.payment_method ?? '',
+          amount: parseNumeric(data.order_amount) ?? prev.amount ?? null,
+          data_type: data.order_data_type ?? prev.data_type ?? '',
+          material_open: parseNumeric(data.order_material_open) ?? prev.material_open ?? null,
+          material_replenish: parseNumeric(data.order_material_replenish) ?? prev.material_replenish ?? null,
+          reorder: parseNumeric(data.order_reorder) ?? prev.reorder ?? null,
+          measure_colleague: data.order_measure_colleague ?? prev.measure_colleague ?? '',
+          reorder_location: data.order_reorder_location ?? prev.reorder_location ?? '',
+          notes: data.order_notes ?? prev.notes ?? '',
+          responsibility_option: data.responsibility_option ?? prev.responsibility_option ?? '',
+          urgency: data.urgency ?? prev.urgency ?? '',
+          install_difficulty: data.install_difficulty ?? prev.install_difficulty ?? '',
+          doors: parseNumeric(data.order_install_doors) ?? prev.doors ?? null,
+          windows: parseNumeric(data.order_install_windows) ?? prev.windows ?? null,
+          aluminum: parseNumeric(data.order_install_aluminum) ?? prev.aluminum ?? null,
+          old_removed: parseNumeric(data.order_old_removed) ?? prev.old_removed ?? null,
+        };
+        updateData.follow_up_cases = followUp;
+      }
+    }
 
     console.log('Updating report with data:', JSON.stringify(updateData, null, 2));
 

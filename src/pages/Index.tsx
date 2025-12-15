@@ -52,9 +52,35 @@ export default function Index() {
     }
   }, [user]);
 
+  // Listen for backend updates (e.g. Google Sheet -> backend sync)
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`reports:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reports',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          // Keep UI in sync when a report is updated outside this session
+          fetchReports();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   const fetchReports = async () => {
     if (!user) return;
-    
+
     setIsLoadingReports(true);
     const { data, error } = await supabase
       .from('reports')
