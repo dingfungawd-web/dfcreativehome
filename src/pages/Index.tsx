@@ -416,28 +416,43 @@ export default function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Background decoration */}
+      <div className="fixed inset-0 gradient-mesh opacity-30 pointer-events-none" />
+      <div className="fixed top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+      
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border-b shadow-sm">
+      <header className="sticky top-0 z-50 glass border-b border-border/50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img 
-              src="/logo.jpg" 
-              alt="Logo" 
-              className="w-10 h-10 rounded-xl object-cover"
-            />
+            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md overflow-hidden">
+              <img 
+                src="/logo.jpg" 
+                alt="Logo" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
             <div>
-              <h1 className="font-semibold text-foreground">工作報告系統</h1>
+              <h1 className="font-semibold text-foreground tracking-tight">工作報告系統</h1>
               <p className="text-xs text-muted-foreground">管理您的安裝報告</p>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">{username}</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50">
+              <User className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">{username}</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={handleSignOut}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleSignOut}
+              className="hover:bg-destructive/10 hover:text-destructive transition-colors"
+            >
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -445,26 +460,37 @@ export default function Index() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 relative z-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="new-report" className="gap-2">
+          <TabsList className="mb-6 bg-muted/50 p-1 border border-border/50">
+            <TabsTrigger 
+              value="new-report" 
+              className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-md transition-all duration-300"
+            >
               <Plus className="h-4 w-4" />
               {editingReport ? '編輯報告' : '新增報告'}
             </TabsTrigger>
-            <TabsTrigger value="my-reports" className="gap-2">
+            <TabsTrigger 
+              value="my-reports" 
+              className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-md transition-all duration-300"
+            >
               <List className="h-4 w-4" />
               我的報告
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="new-report">
+          <TabsContent value="new-report" className="animate-fade-in">
             {editingReport && (
-              <div className="mb-4 p-3 bg-muted rounded-lg flex items-center justify-between">
+              <div className="mb-4 p-4 glass rounded-xl flex items-center justify-between border-primary/20">
                 <span className="text-sm text-muted-foreground">
-                  正在編輯報告：{editingReport.report_code}
+                  正在編輯報告：<span className="text-foreground font-medium">{editingReport.report_code}</span>
                 </span>
-                <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleCancelEdit}
+                  className="hover:bg-destructive/10 hover:text-destructive"
+                >
                   <X className="h-4 w-4 mr-1" />
                   取消編輯
                 </Button>
@@ -516,9 +542,9 @@ export default function Index() {
             />
           </TabsContent>
 
-          <TabsContent value="my-reports">
+          <TabsContent value="my-reports" className="animate-fade-in">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold">我的報告</h2>
+              <h2 className="text-xl font-semibold tracking-tight">我的報告</h2>
               <p className="text-sm text-muted-foreground">查看和管理您提交的所有報告</p>
             </div>
 
