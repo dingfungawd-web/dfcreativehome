@@ -124,7 +124,7 @@ export interface ReportFormData {
 
 export const PAYMENT_METHODS = ['FPS', 'WeChat', 'Alipay', '現金', '支票'];
 export const DATA_TYPES = ['NewData', 'OldData'];
-export const RESPONSIBILITY_OPTIONS = ['NONE', 'FactoryResponsible', 'InstallerResponsible'];
+export const RESPONSIBILITY_OPTIONS = ['', '廠責任', '度尺責任'];
 export const URGENCY_OPTIONS = ['Normal', 'Urgent'];
 export const TEAMS = ['A', 'B', 'C', 'D', 'E', 'S', 'Z'];
 
