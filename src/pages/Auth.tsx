@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardList, User, Lock, Loader2, Sparkles } from 'lucide-react';
+import { User, Lock, Loader2, Sparkles } from 'lucide-react';
 import { z } from 'zod';
+import logo from '@/assets/logo.jpg';
 
 const loginSchema = z.object({
   username: z.string().trim().min(2, '使用者名稱至少需要2個字元'),
@@ -112,8 +113,8 @@ export default function Auth() {
       <div className="w-full max-w-md animate-fade-in-scale relative z-10">
         {/* Logo / Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl gradient-primary mb-6 shadow-glow animate-float">
-            <ClipboardList className="h-10 w-10 text-primary-foreground" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl overflow-hidden mb-6 shadow-glow animate-float">
+            <img src={logo} alt="Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">工作報告系統</h1>
           <p className="text-muted-foreground mt-3 flex items-center justify-center gap-2">
