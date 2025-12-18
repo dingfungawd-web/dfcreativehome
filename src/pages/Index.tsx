@@ -364,6 +364,8 @@ export default function Index() {
           followUpCases || []
         );
         
+        // Switch to my-reports tab after successful submission
+        setActiveTab('my-reports');
         fetchReports();
       }
     }
@@ -417,6 +419,15 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background relative">
+      {/* Full-screen loading overlay when submitting */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-lg font-medium text-foreground">提交中...</p>
+          <p className="text-sm text-muted-foreground mt-2">請稍候，正在處理您的報告</p>
+        </div>
+      )}
+
       {/* Background decoration */}
       <div className="fixed inset-0 gradient-mesh opacity-30 pointer-events-none" />
       <div className="fixed top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
