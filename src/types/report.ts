@@ -148,6 +148,7 @@ export const MEASURERS = [
   '何家俊',
   '張佩樺',
   '楊彬',
+  '前同事',
 ];
 
 // Legacy export for backwards compatibility
